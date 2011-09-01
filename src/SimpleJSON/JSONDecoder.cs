@@ -4,6 +4,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SimpleJSON {
+    public class ParseError : Exception {
+        public readonly int Position;
+
+        public ParseError(string message, int position) : base(message) {
+            Position = position;
+        }
+    }
+
     public static class JSONDecoder {
         private const char ObjectStart = '{';
         private const char ObjectEnd = '}';
@@ -68,7 +76,7 @@ namespace SimpleJSON {
                 if (IsNumberStart(nextChar)) {
                     return ScanNumber(json, index);
                 }
-                throw new ArgumentException("Invalid JSON", "json");
+                throw new ParseError("Unexpected token " + nextChar, index);
             }
         }
 
@@ -110,7 +118,7 @@ namespace SimpleJSON {
             var match = NumberRegex.Match(json, index);
 
             if (!match.Success) {
-                throw new ArgumentException("Could not parse number", "json");
+                throw new ParseError("Could not parse number", index);
             }
 
             return new ScannerData(JObject.CreateNumber(match.Groups[1].Value,
@@ -129,7 +137,7 @@ namespace SimpleJSON {
                 var result = Scan(json, index);
                 index = SkipWhitespace(json, result.Index);
                 if (json[index] != ArraySeparator && json[index] != ArrayEnd) {
-                    throw new ArgumentException("Expecting array separator (,) or array end (])", "json");
+                    throw new ParseError("Expecting array separator (,) or array end (])", index);
                 }
                 list.Add(result.Result);
             }
@@ -146,17 +154,17 @@ namespace SimpleJSON {
                 ++index;
                 var keyResult = Scan(json, index);
                 if (keyResult.Result.Kind != JObjectKind.String) {
-                    throw new ArgumentException("Object keys must be strings", "json");
+                    throw new ParseError("Object keys must be strings", index);
                 }
                 index = SkipWhitespace(json, keyResult.Index);
                 if (json[index] != ObjectSeparator) {
-                    throw new ArgumentException("Expecting object separator (:)", "json");
+                    throw new ParseError("Expecting object separator (:)", index);
                 }
                 ++index;
                 var valueResult = Scan(json, index);
                 index = SkipWhitespace(json, valueResult.Index);
                 if (json[index] != ObjectEnd && json[index] != ObjectPairSeparator) {
-                    throw new ArgumentException("Expecting object pair separator (,) or object end (})");
+                    throw new ParseError("Expecting object pair separator (,) or object end (})", index);
                 }
                 dict[keyResult.Result.StringValue] = valueResult.Result;
             }
@@ -172,9 +180,10 @@ namespace SimpleJSON {
 
         private static int ExpectConstant(string json, int index, string expected) {
             if (json.Substring(index, expected.Length) != expected) {
-                throw new ArgumentException(string.Format("Expected '{0}' got '{1}'",
-                                                          expected,
-                                                          json.Substring(index, expected.Length)));
+                throw new ParseError(string.Format("Expected '{0}' got '{1}'",
+                                                   expected,
+                                                   json.Substring(index, expected.Length)),
+                                     index);
             }
             return index + expected.Length;
         }
