@@ -189,7 +189,7 @@ namespace SimpleJSON {
         }
 
         private static bool IsNumberStart(char b) {
-            return b == '-' || (b >= '1' && b <= '9');
+            return b == '-' || (b >= '0' && b <= '9');
         }
     }
 }

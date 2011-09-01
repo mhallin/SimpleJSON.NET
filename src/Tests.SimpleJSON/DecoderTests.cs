@@ -43,6 +43,14 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void NumberZero() {
+            var obj = DecodeJSON("0");
+
+            Assert.AreEqual(JObjectKind.Number, obj.Kind);
+            Assert.AreEqual(0, (int)obj);
+        }
+
+        [Test]
         public void SByteAndLarger() {
             var obj = DecodeJSON("123");
             var negObj = DecodeJSON("-123");
