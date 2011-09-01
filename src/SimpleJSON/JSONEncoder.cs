@@ -59,6 +59,8 @@ namespace SimpleJSON {
                 EncodeDictionary((IDictionary)obj);
             } else if (obj is IEnumerable) {
                 EncodeEnumerable((IEnumerable)obj);
+            } else if (obj is Enum) {
+                EncodeObject(Convert.ChangeType(obj, Enum.GetUnderlyingType(obj.GetType())));
             } else {
                 throw new ArgumentException("Can't serialize object of type " + obj.GetType().Name, "obj");
             }

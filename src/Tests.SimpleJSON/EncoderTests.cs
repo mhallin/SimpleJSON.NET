@@ -4,6 +4,11 @@ using NUnit.Framework;
 using SimpleJSON;
 
 namespace Tests.SimpleJSON {
+    public enum LongEnumType :long {
+        First,
+        Second
+    }
+
     [TestFixture]
     public class EncoderTests {
         private Dictionary<string, string> _stringTestCases;
@@ -90,6 +95,18 @@ namespace Tests.SimpleJSON {
         public void Dictionary() {
             Assert.AreEqual("{\"X\":10,\"Y\":20}",
                             EncodeObject(new Dictionary<string, float> { { "X", 10 }, { "Y", 20 } }));
+        }
+
+        [Test]
+        public void Enum() {
+            Assert.AreEqual("0", EncodeObject(FloatSize.Double));
+            Assert.AreEqual("1", EncodeObject(FloatSize.Single));
+        }
+
+        [Test]
+        public void LongEnum() {
+            Assert.AreEqual("0", EncodeObject(LongEnumType.First));
+            Assert.AreEqual("1", EncodeObject(LongEnumType.Second));
         }
 
         private static string EncodeObject(object obj) {
