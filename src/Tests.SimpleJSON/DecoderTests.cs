@@ -181,7 +181,7 @@ namespace Tests.SimpleJSON {
         }
 
         private static JObject DecodeJSON(string json) {
-            return JSONDecoder.DecodeJSON(json);
+            return JSONDecoder.Decode(json);
         }
     }
 }

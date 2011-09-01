@@ -20,7 +20,7 @@ namespace SimpleJSON {
         private static readonly Regex NumberRegex = new Regex("(-?(?:0|[1-9]\\d*))(\\.\\d+)?([eE][-+]?\\d+)?",
                                                               RegexOptions.CultureInvariant | RegexOptions.Multiline);
 
-        public static JObject DecodeJSON(string json) {
+        public static JObject Decode(string json) {
             var data = Scan(json, 0);
             return data.Result;
         }
