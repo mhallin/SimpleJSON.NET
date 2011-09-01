@@ -38,6 +38,24 @@ To deserialize something, use ``JSONDecoder.Decode(string)``::
 If decode encounters an invalid string, a ``ParseError`` is thrown
 with a position indicator where it went wrong.
 
+For numbers ``JObject`` populates all fields big enough to hold the
+parsed number. For example;
+
+ * the number "150" will populate all number
+   fields except ``sbyte`` (which has a upper bound of +127), and the
+   ``MinInteger`` field will be set to ``Int8``.
+ * -1500000 will only populate the signed fields ``int`` and
+    ``long``.
+ * the number "150.5" will only populate the ``float`` and ``double``
+   fields, since they are the only ones that can represent fractional
+   numbers.
+
+This means that you don't have to worry about if the original JSON
+representation had an integral or fractional value; just use the type
+you are looking for. If you want to check for overflows, use the
+``IsNegative``, ``MinInteger`` and ``MinFloat`` field to determine if
+the parsed number was bigger than what your data type can fit.
+
 License
 -------
 
