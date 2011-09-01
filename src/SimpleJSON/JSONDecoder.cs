@@ -48,6 +48,7 @@ namespace SimpleJSON {
                 };
 
         private static ScannerData Scan(string json, int index) {
+            index = SkipWhitespace(json, index);
             var nextChar = json[index];
 
             switch (nextChar) {
@@ -120,12 +121,13 @@ namespace SimpleJSON {
         private static ScannerData ScanArray(string json, int index) {
             var list = new List<JObject>();
 
-            if (json[index + 1] == ArrayEnd) return new ScannerData(JObject.CreateArray(list), index + 2);
+            var nextTokenIndex = SkipWhitespace(json, index + 1);
+            if (json[nextTokenIndex] == ArrayEnd) return new ScannerData(JObject.CreateArray(list), nextTokenIndex + 1);
 
             while (json[index] != ArrayEnd) {
                 ++index;
                 var result = Scan(json, index);
-                index = result.Index;
+                index = SkipWhitespace(json, result.Index);
                 if (json[index] != ArraySeparator && json[index] != ArrayEnd) {
                     throw new ArgumentException("Expecting array separator (,) or array end (])", "json");
                 }
@@ -137,7 +139,8 @@ namespace SimpleJSON {
         private static ScannerData ScanObject(string json, int index) {
             var dict = new Dictionary<string, JObject>();
 
-            if (json[index + 1] == ObjectEnd) return new ScannerData(JObject.CreateObject(dict), index + 1);
+            var nextTokenIndex = SkipWhitespace(json, index + 1);
+            if (json[nextTokenIndex] == ObjectEnd) return new ScannerData(JObject.CreateObject(dict), nextTokenIndex + 1);
 
             while (json[index] != ObjectEnd) {
                 ++index;
@@ -145,19 +148,26 @@ namespace SimpleJSON {
                 if (keyResult.Result.Kind != JObjectKind.String) {
                     throw new ArgumentException("Object keys must be strings", "json");
                 }
-                index = keyResult.Index;
+                index = SkipWhitespace(json, keyResult.Index);
                 if (json[index] != ObjectSeparator) {
                     throw new ArgumentException("Expecting object separator (:)", "json");
                 }
                 ++index;
                 var valueResult = Scan(json, index);
-                index = valueResult.Index;
+                index = SkipWhitespace(json, valueResult.Index);
                 if (json[index] != ObjectEnd && json[index] != ObjectPairSeparator) {
                     throw new ArgumentException("Expecting object pair separator (,) or object end (})");
                 }
                 dict[keyResult.Result.StringValue] = valueResult.Result;
             }
             return new ScannerData(JObject.CreateObject(dict), index + 1);
+        }
+
+        private static int SkipWhitespace(string json, int index) {
+            while (char.IsWhiteSpace(json[index])) {
+                ++index;
+            }
+            return index;
         }
 
         private static int ExpectConstant(string json, int index, string expected) {

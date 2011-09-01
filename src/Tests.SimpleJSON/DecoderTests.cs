@@ -28,6 +28,21 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void StringWithWhitespace() {
+            foreach (var pair in _stringTestCases) {
+                Assert.AreEqual(pair.Value, (string)DecodeJSON(" " + pair.Key + " "));
+            }
+        }
+
+        [Test]
+        public void Whitespaces() {
+            Assert.AreEqual(123, (int)DecodeJSON(" 123"));
+            Assert.AreEqual(123, (int)DecodeJSON("\t123"));
+            Assert.AreEqual(123, (int)DecodeJSON("\n123"));
+            Assert.AreEqual(123, (int)DecodeJSON("\r123"));
+        }
+
+        [Test]
         public void SByteAndLarger() {
             var obj = DecodeJSON("123");
             var negObj = DecodeJSON("-123");
@@ -110,9 +125,20 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void NullWithWhitespace() {
+            Assert.AreEqual(JObjectKind.Null, DecodeJSON(" null ").Kind);
+        }
+
+        [Test]
         public void Boolean() {
             Assert.IsTrue((bool)DecodeJSON("true"));
             Assert.IsFalse((bool)DecodeJSON("false"));
+        }
+
+        [Test]
+        public void BooleanWithWhitespace() {
+            Assert.IsTrue((bool)DecodeJSON(" true "));
+            Assert.IsFalse((bool)DecodeJSON(" false "));
         }
 
         [Test]
@@ -127,8 +153,27 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void ArrayWithWhitespace() {
+            var obj = DecodeJSON(" [ 1 , \"str\" , null ] ");
+
+            Assert.AreEqual(JObjectKind.Array, obj.Kind);
+            Assert.AreEqual(3, obj.Count);
+            Assert.AreEqual(1, (int)obj[0]);
+            Assert.AreEqual("str", (string)obj[1]);
+            Assert.AreEqual(JObjectKind.Null, obj[2].Kind);
+        }
+
+        [Test]
         public void EmptyArray() {
             var obj = DecodeJSON("[]");
+
+            Assert.AreEqual(JObjectKind.Array, obj.Kind);
+            Assert.AreEqual(0, obj.Count);
+        }
+
+        [Test]
+        public void EmptyArrayWithWhitespace() {
+            var obj = DecodeJSON(" [ ] ");
 
             Assert.AreEqual(JObjectKind.Array, obj.Kind);
             Assert.AreEqual(0, obj.Count);
@@ -147,8 +192,28 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void NestedArraysWithWhitespace() {
+            var obj = DecodeJSON(" [ 1 , [ 2 , 3 ] , 4 ] ");
+
+            Assert.AreEqual(3, obj.Count);
+            Assert.AreEqual(2, obj[1].Count);
+            Assert.AreEqual(1, (int)obj[0]);
+            Assert.AreEqual(2, (int)obj[1][0]);
+            Assert.AreEqual(3, (int)obj[1][1]);
+            Assert.AreEqual(4, (int)obj[2]);
+        }
+
+        [Test]
         public void NestedEmptyArray() {
             var obj = DecodeJSON("[[]]");
+
+            Assert.AreEqual(1, obj.Count);
+            Assert.AreEqual(0, obj[0].Count);
+        }
+
+        [Test]
+        public void NestedEmptyArrayWithWhitespace() {
+            var obj = DecodeJSON(" [ [ ] ] ");
 
             Assert.AreEqual(1, obj.Count);
             Assert.AreEqual(0, obj[0].Count);
@@ -163,6 +228,14 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void EmptyObjectWithWhitespace() {
+            var obj = DecodeJSON(" { } ");
+
+            Assert.AreEqual(0, obj.Count);
+            Assert.AreEqual(JObjectKind.Object, obj.Kind);
+        }
+
+        [Test]
         public void NestedEmptyObject() {
             var obj = DecodeJSON("{\"key\":{}}");
 
@@ -171,8 +244,26 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void NestedEmptyObjectWithWhitespace() {
+            var obj = DecodeJSON(" { \"key\" : { } } ");
+
+            Assert.AreEqual(1, obj.Count);
+            Assert.AreEqual(0, obj["key"].Count);
+        }
+
+        [Test]
         public void Object() {
             var obj = DecodeJSON("{\"key1\":12,\"key2\":\"value\"}");
+
+            Assert.AreEqual(2, obj.Count);
+            Assert.AreEqual(JObjectKind.Object, obj.Kind);
+            Assert.AreEqual(12, (int)obj["key1"]);
+            Assert.AreEqual("value", (string)obj["key2"]);
+        }
+
+        [Test]
+        public void ObjectWithWhitespace() {
+            var obj = DecodeJSON(" { \"key1\" : 12 , \"key2\" : \"value\" } ");
 
             Assert.AreEqual(2, obj.Count);
             Assert.AreEqual(JObjectKind.Object, obj.Kind);
