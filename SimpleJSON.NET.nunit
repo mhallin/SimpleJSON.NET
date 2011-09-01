@@ -1,0 +1,9 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug" />
+  <Config name="Debug" binpathtype="Auto">
+    <assembly path="src\Tests.SimpleJSON\..\..\bin\Debug\Tests.SimpleJSON.dll" />
+  </Config>
+  <Config name="Release" binpathtype="Auto">
+    <assembly path="src\Tests.SimpleJSON\..\..\bin\Release\Tests.SimpleJSON.dll" />
+  </Config>
+</NUnitProject>
