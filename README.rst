@@ -45,7 +45,7 @@ parsed number. For example;
    fields except ``sbyte`` (which has a upper bound of +127), and the
    ``MinInteger`` field will be set to ``Int8``.
  * -1500000 will only populate the signed fields ``int`` and
-    ``long``.
+   ``long``.
  * the number "150.5" will only populate the ``float`` and ``double``
    fields, since they are the only ones that can represent fractional
    numbers.
