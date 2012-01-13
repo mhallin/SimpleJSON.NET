@@ -34,6 +34,7 @@
   <ItemGroup>
     <Compile Include="DecoderTests.cs" />
     <Compile Include="EncoderTests.cs" />
+    <Compile Include="JObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +42,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\refs\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleJSON\SimpleJSON.csproj">

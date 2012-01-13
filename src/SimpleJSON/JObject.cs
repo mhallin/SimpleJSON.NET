@@ -211,5 +211,68 @@ namespace SimpleJSON {
                 MinFloat = FloatSize.Single;
             }
         }
+
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(obj, this)) return true;
+            if (!(obj is JObject)) return false;
+
+            var jobj = (JObject)obj;
+            if (jobj.Kind != Kind) return false;
+
+            switch (Kind) {
+            case JObjectKind.Array:
+                if (ArrayValue.Count != jobj.ArrayValue.Count) return false;
+                for (var i = 0; i < ArrayValue.Count; ++i) {
+                    if (!ArrayValue[i].Equals(jobj.ArrayValue[i])) return false;
+                }
+                return true;
+            case JObjectKind.Boolean:
+                return BooleanValue == jobj.BooleanValue;
+            case JObjectKind.Number:
+                return EqualNumber(this, jobj);
+            case JObjectKind.Object:
+                if (ObjectValue.Count != jobj.ObjectValue.Count) return false;
+                foreach (var pair in ObjectValue) {
+                    if (!jobj.ObjectValue.ContainsKey(pair.Key) ||
+                        !pair.Value.Equals(jobj.ObjectValue[pair.Key])) return false;
+                }
+                return true;
+            case JObjectKind.String:
+                return StringValue == jobj.StringValue;
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode() {
+            switch (Kind) {
+            case JObjectKind.Array: return ArrayValue.GetHashCode();
+            case JObjectKind.Boolean: return BooleanValue.GetHashCode();
+            case JObjectKind.Null: return 0;
+            case JObjectKind.Object: return ObjectValue.GetHashCode();
+            case JObjectKind.String: return StringValue.GetHashCode();
+            case JObjectKind.Number:
+                if (IsFractional) return DoubleValue.GetHashCode();
+                if (IsNegative) return LongValue.GetHashCode();
+                return ULongValue.GetHashCode();
+            }
+            return 0;
+        }
+
+        public static bool EqualNumber(JObject o1, JObject o2) {
+            if (o1.MinFloat != o2.MinFloat ||
+                o1.MinInteger != o2.MinInteger ||
+                o1.IsNegative != o2.IsNegative ||
+                o1.IsFractional != o2.IsFractional) return false;
+
+            if (o1.IsFractional) {
+                return o1.DoubleValue == o2.DoubleValue;
+            }
+            if (o1.IsNegative) {
+                return o1.LongValue == o2.LongValue;
+            }
+
+            return o1.ULongValue == o2.ULongValue;
+        }
     }
 }
