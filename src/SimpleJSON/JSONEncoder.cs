@@ -61,6 +61,36 @@ namespace SimpleJSON {
                 EncodeEnumerable((IEnumerable)obj);
             } else if (obj is Enum) {
                 EncodeObject(Convert.ChangeType(obj, Enum.GetUnderlyingType(obj.GetType())));
+            } else if (obj is JObject) {
+                var jobj = (JObject)obj;
+                switch (jobj.Kind) {
+                case JObjectKind.Array:
+                    EncodeEnumerable(jobj.ArrayValue);
+                    break;
+                case JObjectKind.Boolean:
+                    EncodeBool(jobj.BooleanValue);
+                    break;
+                case JObjectKind.Null:
+                    EncodeNull();
+                    break;
+                case JObjectKind.Number:
+                    if (jobj.IsFractional) {
+                        EncodeDouble(jobj.DoubleValue);
+                    } else if (jobj.IsNegative) {
+                        EncodeLong(jobj.LongValue);
+                    } else {
+                        EncodeULong(jobj.ULongValue);
+                    }
+                    break;
+                case JObjectKind.Object:
+                    EncodeDictionary(jobj.ObjectValue);
+                    break;
+                case JObjectKind.String:
+                    EncodeString(jobj.StringValue);
+                    break;
+                default:
+                    throw new ArgumentException("Can't serialize object of type " + obj.GetType().Name, "obj");
+                }
             } else {
                 throw new ArgumentException("Can't serialize object of type " + obj.GetType().Name, "obj");
             }
