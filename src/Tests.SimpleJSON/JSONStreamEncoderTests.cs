@@ -37,6 +37,7 @@ namespace Tests.SimpleJSON {
 
         [Test]
         public void Int() {
+            Assert.AreEqual("0", EncodeSimple(e => e.WriteNumber(0)));
             Assert.AreEqual("123", EncodeSimple(e => e.WriteNumber(123)));
             Assert.AreEqual("2147483647", EncodeSimple(e => e.WriteNumber(Int32.MaxValue)));
             Assert.AreEqual("-2147483648", EncodeSimple(e => e.WriteNumber(Int32.MinValue)));
@@ -48,6 +49,7 @@ namespace Tests.SimpleJSON {
 
         [Test]
         public void UInt() {
+            Assert.AreEqual("0", EncodeSimple(e => e.WriteNumber(0U)));
             Assert.AreEqual("123", EncodeSimple(e => e.WriteNumber(123U)));
             Assert.AreEqual("4294967295", EncodeSimple(e => e.WriteNumber(UInt32.MaxValue)));
 
@@ -56,6 +58,7 @@ namespace Tests.SimpleJSON {
 
         [Test]
         public void Long() {
+            Assert.AreEqual("0", EncodeSimple(e => e.WriteNumber(0L)));
             Assert.AreEqual("123", EncodeSimple(e => e.WriteNumber(123L)));
             Assert.AreEqual("9223372036854775807", EncodeSimple(e => e.WriteNumber(Int64.MaxValue)));
             Assert.AreEqual("-9223372036854775808", EncodeSimple(e => e.WriteNumber(Int64.MinValue)));
@@ -68,23 +71,28 @@ namespace Tests.SimpleJSON {
 
         [Test]
         public void Double() {
+            Assert.AreEqual("0", EncodeSimple(e => e.WriteNumber(0.0)));
             Assert.AreEqual("1.5", EncodeSimple(e => e.WriteNumber(1.5)));
             Assert.AreEqual("1000000", EncodeSimple(e => e.WriteNumber(1.0e6)));
             Assert.AreEqual("-1000000", EncodeSimple(e => e.WriteNumber(-1.0e6)));
-            Assert.AreEqual("5E-06", EncodeSimple(e => e.WriteNumber(5.0e-6)));
+            Assert.AreEqual("0.000005", EncodeSimple(e => e.WriteNumber(5.0e-6)));
+            Assert.AreEqual("0.012", EncodeSimple(e => e.WriteNumber(0.012)));
 
             Assert.AreEqual("1.5", EncodeSimple(e => e.WriteJObject(JObject.CreateNumber(false, true, false, 1, 5, 1, 0))));
             Assert.AreEqual("1000000", EncodeSimple(e => e.WriteJObject(JObject.CreateNumber(false, false, false, 1000000, 0, 1, 0))));
             Assert.AreEqual("-1000000", EncodeSimple(e => e.WriteJObject(JObject.CreateNumber(true, false, false, 1000000, 0, 1, 0))));
-            Assert.AreEqual("5E-06", EncodeSimple(e => e.WriteJObject(JObject.CreateNumber(false, true, true, 5, 0, 0, 6))));
+            Assert.AreEqual("0.000005", EncodeSimple(e => e.WriteJObject(JObject.CreateNumber(false, true, true, 5, 0, 0, 6))));
         }
 
         [Test]
         public void Float() {
+            Assert.AreEqual("0", EncodeSimple(e => e.WriteNumber(0.0f)));
             Assert.AreEqual("1.5", EncodeSimple(e => e.WriteNumber(1.5f)));
             Assert.AreEqual("1000000", EncodeSimple(e => e.WriteNumber(1.0e6f)));
             Assert.AreEqual("-1000000", EncodeSimple(e => e.WriteNumber(-1.0e6f)));
-            Assert.AreEqual("5E-05", EncodeSimple(e => e.WriteNumber(5.0e-5f)));
+
+            Assert.AreEqual(10.68728f, JSONDecoder.Decode(EncodeSimple(e => e.WriteNumber(10.68728f))).FloatValue);
+            Assert.AreEqual(-10.68728f, JSONDecoder.Decode(EncodeSimple(e => e.WriteNumber(-10.68728f))).FloatValue);
         }
 
         [Test]

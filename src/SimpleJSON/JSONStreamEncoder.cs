@@ -78,22 +78,22 @@ namespace SimpleJSON {
 
         public void WriteNumber(long l) {
             WriteSeparator();
-            _writer.Write(l.ToString(CultureInfo.InvariantCulture));
+            _writer.Write(l);
         }
 
         public void WriteNumber(ulong l) {
             WriteSeparator();
-            _writer.Write(l.ToString(CultureInfo.InvariantCulture));
-        }
-
-        public void WriteNumber(float f) {
-            WriteSeparator();
-            _writer.Write(f.ToString(CultureInfo.InvariantCulture));
+            _writer.Write(l);
         }
 
         public void WriteNumber(double d) {
             WriteSeparator();
-            _writer.Write(d.ToString(CultureInfo.InvariantCulture));
+            WriteFractionalNumber(d, 0.00000000000000001);
+        }
+
+        public void WriteNumber(float f) {
+            WriteSeparator();
+            WriteFractionalNumber(f, 0.000000001);
         }
 
         public void WriteNull() {
@@ -176,6 +176,36 @@ namespace SimpleJSON {
             }
 
             _writer.Write('"');
+        }
+
+        private void WriteFractionalNumber(double d, double tolerance) {
+            if (d < 0) {
+                _writer.Write('-');
+                d = -d;
+            } else if (d == 0) {
+                _writer.Write('0');
+                return;
+            }
+
+            var magnitude = (int)Math.Log10(d);
+
+            if (magnitude < 0) {
+                _writer.Write("0.");
+                for (int i = 0; i > magnitude + 1; --i) {
+                    _writer.Write('0');
+                }
+            }
+
+            while (d > tolerance || magnitude >= 0) {
+                var weight = Math.Pow(10, magnitude);
+                var digit = (int)Math.Floor(d / weight);
+                d -= digit * weight;
+                _writer.Write((char)('0' + digit));
+                if (magnitude == 0 && (d > tolerance || magnitude > 0)) {
+                    _writer.Write('.');
+                }
+                --magnitude;
+            }
         }
 
         private void WriteSeparator() {
