@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 using SimpleJSON;
@@ -15,9 +16,15 @@ namespace Tests.SimpleJSON {
                                    {
                                        { "string", "\"string\"" },
                                        { "\" \\ \b \f \n \r \t", "\"\\\" \\\\ \\b \\f \\n \\r \\t\"" },
+                                       { "\"\\\b\f\n\r\t", "\"\\\"\\\\\\b\\f\\n\\r\\t\"" },
+                                       { "foo \" \\ \b \f \n \r \t bar", "\"foo \\\" \\\\ \\b \\f \\n \\r \\t bar\"" },
                                        { "\u03A0", "\"\\u03A0\"" },
+                                       { "foo \u03A0 bar", "\"foo \\u03A0 bar\"" },
                                        { "\0", "\"\\u0000\"" },
-                                       { "\U0001d120", "\"\\uD834\\uDD20\"" }
+                                       { "foo \0 bar", "\"foo \\u0000 bar\"" },
+                                       { "\U0001d120", "\"\\uD834\\uDD20\"" },
+                                       { "bar \U0001d120 foo", "\"bar \\uD834\\uDD20 foo\"" },
+                                       { "å", "\"\\u00E5\"" }
                                    };
         }
 
@@ -174,7 +181,7 @@ namespace Tests.SimpleJSON {
         }
 
         private string EncodeSimple(Action<JSONStreamEncoder> callback) {
-            var writer = new StringWriter();
+            var writer = new StringWriter(CultureInfo.InvariantCulture);
             var encoder = new JSONStreamEncoder(writer);
             callback(encoder);
             writer.Flush();
