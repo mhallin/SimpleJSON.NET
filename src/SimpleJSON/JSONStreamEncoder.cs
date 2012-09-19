@@ -146,19 +146,35 @@ namespace SimpleJSON {
 
         private void WriteBareString(string str) {
             _writer.Write('"');
-            foreach (var c in str) {
-                if (JSONEncoder.EscapeChars.ContainsKey(c)) {
-                    _writer.Write(JSONEncoder.EscapeChars[c]);
-                } else {
-                    if (c > 0x80 || c < 0x20) {
+
+            int len = str.Length;
+            int lastIndex = 0;
+            int i = 0;
+
+            for (; i < len; ++i) {
+                char c = str[i];
+
+                if (c > 0x80 || c < 0x20 || c == '"' || c == '\\') {
+                    if (i > lastIndex) {
+                        _writer.Write(str.Substring(lastIndex, i - lastIndex));
+                    }
+                    if (JSONEncoder.EscapeChars.ContainsKey(c)) {
+                        _writer.Write(JSONEncoder.EscapeChars[c]);
+                    } else {
                         _writer.Write("\\u" + Convert.ToString(c, 16)
                                                 .ToUpper(CultureInfo.InvariantCulture)
                                                 .PadLeft(4, '0'));
-                    } else {
-                        _writer.Write(c);
                     }
+                    lastIndex = i + 1;
                 }
             }
+
+            if (lastIndex == 0 && i > lastIndex) {
+                _writer.Write(str);
+            } else if (i > lastIndex) {
+                _writer.Write(str.Substring(lastIndex, i - lastIndex));
+            }
+
             _writer.Write('"');
         }
 
