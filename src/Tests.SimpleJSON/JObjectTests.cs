@@ -57,19 +57,19 @@ namespace Tests.SimpleJSON {
 
         [Test]
         public void NumberEquality() {
-            Assert.AreEqual(JObject.CreateNumber("100", "", ""),
-                            JObject.CreateNumber("100", "", ""));
-            Assert.AreEqual(JObject.CreateNumber("-100", "", ""),
-                            JObject.CreateNumber("-100", "", ""));
-            Assert.AreEqual(JObject.CreateNumber("100", "5", ""),
-                            JObject.CreateNumber("100", "5", ""));
-            Assert.AreEqual(JObject.CreateNumber("100", "5", "2"),
-                            JObject.CreateNumber("100", "5", "2"));
-            Assert.AreEqual(JObject.CreateNumber("-100", "5", "2"),
-                            JObject.CreateNumber("-100", "5", "2"));
+            Assert.AreEqual(JObject.CreateNumber(false, false, false, 100, 0, 0, 0),
+                            JObject.CreateNumber(false, false, false, 100, 0, 0, 0));
+            Assert.AreEqual(JObject.CreateNumber(true, false, false, 100, 0, 0, 0),
+                            JObject.CreateNumber(true, false, false, 100, 0, 0, 0));
+            Assert.AreEqual(JObject.CreateNumber(false, true, false, 100, 5, 1, 0),
+                            JObject.CreateNumber(false, true, false, 100, 5, 1, 0));
+            Assert.AreEqual(JObject.CreateNumber(false, true, false, 100, 5, 1, 2),
+                            JObject.CreateNumber(false, true, false, 100, 5, 1, 2));
+            Assert.AreEqual(JObject.CreateNumber(true, true, false, 100, 5, 1, 2),
+                            JObject.CreateNumber(true, true, false, 100, 5, 1, 2));
 
-            Assert.AreNotEqual(JObject.CreateNumber("-100", "5", "2"),
-                               JObject.CreateNumber("100", "5", "2"));
+            Assert.AreNotEqual(JObject.CreateNumber(true, true, false, 100, 5, 1, 2),
+                               JObject.CreateNumber(false, true, false, 100, 5, 1, 2));
         }
     }
 }

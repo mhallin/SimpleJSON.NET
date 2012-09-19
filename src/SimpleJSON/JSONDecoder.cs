@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace SimpleJSON {
     public class ParseError : Exception {
@@ -24,9 +23,6 @@ namespace SimpleJSON {
         private const char NullStart = 'n';
         private const char TrueStart = 't';
         private const char FalseStart = 'f';
-
-        private static readonly Regex NumberRegex = new Regex("(-?(?:0|[1-9]\\d*))(\\.\\d+)?([eE][-+]?\\d+)?",
-                                                              RegexOptions.CultureInvariant | RegexOptions.Multiline);
 
         public static JObject Decode(string json) {
             var data = Scan(json, 0);
@@ -60,6 +56,10 @@ namespace SimpleJSON {
             var nextChar = json[index];
 
             switch (nextChar) {
+            case ObjectStart:
+                return ScanObject(json, index);
+            case ArrayStart:
+                return ScanArray(json, index);
             case StringStart:
                 return ScanString(json, index + 1);
             case TrueStart:
@@ -68,10 +68,6 @@ namespace SimpleJSON {
                 return ScanFalse(json, index);
             case NullStart:
                 return ScanNull(json, index);
-            case ArrayStart:
-                return ScanArray(json, index);
-            case ObjectStart:
-                return ScanObject(json, index);
             default:
                 if (IsNumberStart(nextChar)) {
                     return ScanNumber(json, index);
@@ -81,25 +77,10 @@ namespace SimpleJSON {
         }
 
         private static ScannerData ScanString(string json, int index) {
-            var strBuilder = new StringBuilder();
-            while (json[index] != '"') {
-                if (json[index] == '\\') {
-                    ++index;
-                    if (EscapeChars.ContainsKey(json[index])) {
-                        strBuilder.Append(EscapeChars[json[index]]);
-                        ++index;
-                    } else if (json[index] == 'u') {
-                        ++index;
-                        var unicodeSequence = Convert.ToInt32(json.Substring(index, 4), 16);
-                        strBuilder.Append((char)unicodeSequence);
-                        index += 4;
-                    }
-                } else {
-                    strBuilder.Append(json[index]);
-                    ++index;
-                }
-            }
-            return new ScannerData(JObject.CreateString(strBuilder.ToString()), index + 1);
+            string s;
+            index = ScanBareString(json, index, out s);
+
+            return new ScannerData(JObject.CreateString(s), index + 1);
         }
 
         private static ScannerData ScanTrue(string json, int index) {
@@ -115,15 +96,57 @@ namespace SimpleJSON {
         }
 
         private static ScannerData ScanNumber(string json, int index) {
-            var match = NumberRegex.Match(json, index);
+            var negative = false;
+            var fractional = false;
+            var negativeExponent = false;
 
-            if (!match.Success) {
-                throw new ParseError("Could not parse number", index);
+            if (json[index] == '-') {
+                negative = true;
+                ++index;
             }
 
-            return new ScannerData(JObject.CreateNumber(match.Groups[1].Value,
-                                                        match.Groups[2].Value,
-                                                        match.Groups[3].Value), index + match.Groups[0].Length);
+            ulong integerPart = 0;
+            if (json[index] != '0') {
+                while (json.Length > index && char.IsNumber(json[index])) {
+                    integerPart = (integerPart * 10) + (ulong)(json[index] - '0');
+                    ++index;
+                }
+            } else {
+                ++index;
+            }
+
+            ulong fractionalPart = 0;
+            int fractionalPartLength = 0;
+            if (json.Length > index && json[index] == '.') {
+                fractional = true;
+
+                ++index;
+                while (json.Length > index && char.IsNumber(json[index])) {
+                    fractionalPart = (fractionalPart * 10) + (ulong)(json[index] - '0');
+                    ++index;
+                    ++fractionalPartLength;
+                }
+            }
+
+            ulong exponent = 0;
+            if (json.Length > index && (json[index] == 'e' || json[index] == 'E')) {
+                fractional = true;
+                ++index;
+
+                if (json[index] == '-') {
+                    negativeExponent = true;
+                    ++index;
+                } else if (json[index] == '+') {
+                    ++index;
+                }
+
+                while (json.Length > index && char.IsNumber(json[index])) {
+                    exponent = (exponent * 10) + (ulong)(json[index] - '0');
+                    ++index;
+                }
+            }
+
+            return new ScannerData(JObject.CreateNumber(negative, fractional, negativeExponent, integerPart, fractionalPart, fractionalPartLength, exponent), index);
         }
 
         private static ScannerData ScanArray(string json, int index) {
@@ -151,12 +174,13 @@ namespace SimpleJSON {
             if (json[nextTokenIndex] == ObjectEnd) return new ScannerData(JObject.CreateObject(dict), nextTokenIndex + 1);
 
             while (json[index] != ObjectEnd) {
-                ++index;
-                var keyResult = Scan(json, index);
-                if (keyResult.Result.Kind != JObjectKind.String) {
+                index = SkipWhitespace(json, index + 1);
+                if (json[index] != '"') {
                     throw new ParseError("Object keys must be strings", index);
                 }
-                index = SkipWhitespace(json, keyResult.Index);
+                string key;
+                index = ScanBareString(json, index + 1, out key) + 1;
+                index = SkipWhitespace(json, index);
                 if (json[index] != ObjectSeparator) {
                     throw new ParseError("Expecting object separator (:)", index);
                 }
@@ -166,7 +190,7 @@ namespace SimpleJSON {
                 if (json[index] != ObjectEnd && json[index] != ObjectPairSeparator) {
                     throw new ParseError("Expecting object pair separator (,) or object end (})", index);
                 }
-                dict[keyResult.Result.StringValue] = valueResult.Result;
+                dict[key] = valueResult.Result;
             }
             return new ScannerData(JObject.CreateObject(dict), index + 1);
         }
@@ -190,6 +214,61 @@ namespace SimpleJSON {
 
         private static bool IsNumberStart(char b) {
             return b == '-' || (b >= '0' && b <= '9');
+        }
+
+        private static int ScanBareString(string json, int index, out string result) {
+            // First determine length
+            var lengthIndex = index;
+            var foundEscape = false;
+            while (json[lengthIndex] != '"') {
+                if (json[lengthIndex] == '\\') {
+                    foundEscape = true;
+                    ++lengthIndex;
+                    if (EscapeChars.ContainsKey(json[lengthIndex]) || json[lengthIndex] == 'u') {
+                        ++lengthIndex;
+                    } else if (json[lengthIndex] == 'u') {
+                        lengthIndex += 5;
+                    }
+                } else {
+                    ++lengthIndex;
+                }
+            }
+
+            if (!foundEscape) {
+                result = json.Substring(index, lengthIndex - index);
+                return lengthIndex;
+            }
+
+            var strBuilder = new StringBuilder(lengthIndex - index);
+
+            var lastIndex = index;
+            while (json[index] != '"') {
+                if (json[index] == '\\') {
+                    if (index > lastIndex) {
+                        strBuilder.Append(json, lastIndex, index - lastIndex);
+                    }
+                    ++index;
+                    if (EscapeChars.ContainsKey(json[index])) {
+                        strBuilder.Append(EscapeChars[json[index]]);
+                        ++index;
+                    } else if (json[index] == 'u') {
+                        ++index;
+                        var unicodeSequence = Convert.ToInt32(json.Substring(index, 4), 16);
+                        strBuilder.Append((char)unicodeSequence);
+                        index += 4;
+                    }
+                    lastIndex = index;
+                } else {
+                    ++index;
+                }
+            }
+
+            if (lastIndex != index) {
+                strBuilder.Append(json, lastIndex, index - lastIndex);
+            }
+
+            result = strBuilder.ToString();
+            return index;
         }
     }
 }

@@ -39,9 +39,9 @@ namespace Tests.SimpleJSON {
             Assert.AreEqual("2147483647", EncodeObject(Int32.MaxValue));
             Assert.AreEqual("-2147483648", EncodeObject(Int32.MinValue));
 
-            Assert.AreEqual("123", EncodeObject(JObject.CreateNumber("123", "", "")));
-            Assert.AreEqual("2147483647", EncodeObject(JObject.CreateNumber("2147483647", "", "")));
-            Assert.AreEqual("-2147483648", EncodeObject(JObject.CreateNumber("-2147483648", "", "")));
+            Assert.AreEqual("123", EncodeObject(JObject.CreateNumber(false, false, false, 123, 0, 0, 0)));
+            Assert.AreEqual("2147483647", EncodeObject(JObject.CreateNumber(false, false, false, 2147483647, 0, 0, 0)));
+            Assert.AreEqual("-2147483648", EncodeObject(JObject.CreateNumber(true, false, false, 2147483648, 0, 0, 0)));
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace Tests.SimpleJSON {
             Assert.AreEqual("123", EncodeObject(123U));
             Assert.AreEqual("4294967295", EncodeObject(UInt32.MaxValue));
 
-            Assert.AreEqual("4294967295", EncodeObject(JObject.CreateNumber("4294967295", "", "")));
+            Assert.AreEqual("4294967295", EncodeObject(JObject.CreateNumber(false, false, false, 4294967295, 0, 0, 0)));
         }
 
         [Test]
@@ -59,9 +59,9 @@ namespace Tests.SimpleJSON {
             Assert.AreEqual("-9223372036854775808", EncodeObject(Int64.MinValue));
 
             Assert.AreEqual("9223372036854775807",
-                            EncodeObject(JObject.CreateNumber("9223372036854775807", "", "")));
+                            EncodeObject(JObject.CreateNumber(false, false, false, 9223372036854775807, 0, 0, 0)));
             Assert.AreEqual("-9223372036854775808",
-                            EncodeObject(JObject.CreateNumber("-9223372036854775808", "", "")));
+                            EncodeObject(JObject.CreateNumber(true, false, false, 9223372036854775808, 0, 0, 0)));
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace Tests.SimpleJSON {
             Assert.AreEqual("18446744073709551615", EncodeObject(UInt64.MaxValue));
 
             Assert.AreEqual("18446744073709551615",
-                            EncodeObject(JObject.CreateNumber("18446744073709551615", "", "")));
+                            EncodeObject(JObject.CreateNumber(false, false, false, 18446744073709551615, 0, 0, 0)));
         }
 
         [Test]
@@ -80,10 +80,10 @@ namespace Tests.SimpleJSON {
             Assert.AreEqual("-1000000", EncodeObject(-1.0e6));
             Assert.AreEqual("5E-06", EncodeObject(5.0e-6));
 
-            Assert.AreEqual("1.5", EncodeObject(JObject.CreateNumber("1", ".5", "")));
-            Assert.AreEqual("1000000", EncodeObject(JObject.CreateNumber("1000000", "", "")));
-            Assert.AreEqual("-1000000", EncodeObject(JObject.CreateNumber("-1000000", "", "")));
-            Assert.AreEqual("5E-06", EncodeObject(JObject.CreateNumber("5", "", "e-06")));
+            Assert.AreEqual("1.5", EncodeObject(JObject.CreateNumber(false, true, false, 1, 5, 1, 0)));
+            Assert.AreEqual("1000000", EncodeObject(JObject.CreateNumber(false, false, false, 1000000, 0, 1, 0)));
+            Assert.AreEqual("-1000000", EncodeObject(JObject.CreateNumber(true, false, false, 1000000, 0, 1, 0)));
+            Assert.AreEqual("5E-06", EncodeObject(JObject.CreateNumber(false, true, true, 5, 0, 0, 6)));
         }
 
         [Test]
@@ -116,15 +116,15 @@ namespace Tests.SimpleJSON {
 
             Assert.AreEqual("[1,2,3]",
                             EncodeObject(JObject.CreateArray(new List<JObject> {
-                                                                     JObject.CreateNumber("1", "", ""),
-                                                                     JObject.CreateNumber("2", "", ""),
-                                                                     JObject.CreateNumber("3", "", "")
+                                                                     JObject.CreateNumber(false, false, false, 1, 0, 0, 0),
+                                                                     JObject.CreateNumber(false, false, false, 2, 0, 0, 0),
+                                                                     JObject.CreateNumber(false, false, false, 3, 0, 0, 0)
                                                                  })));
             Assert.AreEqual("[[],\"str\",1.5]",
                             EncodeObject(JObject.CreateArray(new List<JObject> {
                                                                      JObject.CreateArray(new List<JObject>()),
                                                                      JObject.CreateString("str"),
-                                                                     JObject.CreateNumber("1", ".5", "")
+                                                                     JObject.CreateNumber(false, true, false, 1, 5, 1, 0)
                                                                  })));
         }
 
@@ -135,8 +135,8 @@ namespace Tests.SimpleJSON {
 
             Assert.AreEqual("{\"X\":10,\"Y\":20}",
                             EncodeObject(JObject.CreateObject(new Dictionary<string, JObject> {
-                                                                      { "X", JObject.CreateNumber("10", "", "") },
-                                                                      { "Y", JObject.CreateNumber("20", "", "") }
+                                                                      { "X", JObject.CreateNumber(false, false, false, 10, 0, 0, 0) },
+                                                                      { "Y", JObject.CreateNumber(false, false, false, 20, 0, 0, 0) }
                                                                   })));
         }
 

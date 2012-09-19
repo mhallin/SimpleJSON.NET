@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace SimpleJSON {
     public enum JObjectKind {
@@ -79,7 +78,7 @@ namespace SimpleJSON {
         public static JObject CreateString(string str) { return new JObject(str); }
         public static JObject CreateBoolean(bool b) { return new JObject(b); }
         public static JObject CreateNull() { return new JObject(); }
-        public static JObject CreateNumber(string integer, string frac, string exp) { return new JObject(integer, frac, exp); }
+        public static JObject CreateNumber(bool isNegative, bool isFractional, bool negativeExponent, ulong integerPart, ulong fractionalPart, int fractionalPartLength, ulong exponent) { return new JObject(isNegative, isFractional, negativeExponent, integerPart, fractionalPart, fractionalPartLength, exponent); }
         public static JObject CreateArray(List<JObject> list) { return new JObject(list); }
         public static JObject CreateObject(Dictionary<string, JObject> dict) { return new JObject(dict); }
 
@@ -97,12 +96,12 @@ namespace SimpleJSON {
             Kind = JObjectKind.Null;
         }
 
-        private JObject(string integer, string frac, string exp) {
+        private JObject(bool isNegative, bool isFractional, bool negativeExponent, ulong integerPart, ulong fractionalPart, int fractionalPartLength, ulong exponent) {
             Kind = JObjectKind.Number;
-            if (frac == "" && exp == "") {
-                MakeInteger(integer);
+            if (!isFractional) {
+                MakeInteger(isNegative, integerPart);
             } else {
-                MakeFloat(integer, frac, exp);
+                MakeFloat(isNegative, negativeExponent, integerPart, fractionalPart, fractionalPartLength, exponent);
             }
         }
 
@@ -116,37 +115,11 @@ namespace SimpleJSON {
             ObjectValue = dict;
         }
 
-        private void MakeInteger(string integer) {
-            if (integer[0] == '-') {
-                LongValue = Int64.Parse(integer, CultureInfo.InvariantCulture);
-                IsNegative = true;
-                MinInteger = IntegerSize.Int64;
+        private void MakeInteger(bool isNegative, ulong integerPart) {
+            IsNegative = isNegative;
 
-                if (LongValue >= Int32.MinValue) {
-                    IntValue = (int)LongValue;
-                    MinInteger = IntegerSize.Int32;
-                }
-
-                if (LongValue >= Int16.MinValue) {
-                    ShortValue = (short)LongValue;
-                    MinInteger = IntegerSize.Int16;
-                }
-
-                if (LongValue >= SByte.MinValue) {
-                    SByteValue = (sbyte)LongValue;
-                    MinInteger = IntegerSize.Int8;
-                }
-
-                DoubleValue = LongValue;
-                MinFloat = FloatSize.Double;
-
-                if (DoubleValue >= -Single.MaxValue) {
-                    FloatValue = (float)DoubleValue;
-                    MinFloat = FloatSize.Single;
-                }
-            } else {
-                ULongValue = UInt64.Parse(integer, CultureInfo.InvariantCulture);
-                IsNegative = false;
+            if (!IsNegative) {
+                ULongValue = integerPart;
                 MinInteger = IntegerSize.UInt64;
 
                 if (ULongValue <= Int64.MaxValue) {
@@ -191,11 +164,37 @@ namespace SimpleJSON {
                     FloatValue = (float)DoubleValue;
                     MinFloat = FloatSize.Single;
                 }
+            } else {
+                LongValue = -(long)integerPart;
+                MinInteger = IntegerSize.Int64;
+
+                if (LongValue >= Int32.MinValue) {
+                    IntValue = (int)LongValue;
+                    MinInteger = IntegerSize.Int32;
+                }
+
+                if (LongValue >= Int16.MinValue) {
+                    ShortValue = (short)LongValue;
+                    MinInteger = IntegerSize.Int16;
+                }
+
+                if (LongValue >= SByte.MinValue) {
+                    SByteValue = (sbyte)LongValue;
+                    MinInteger = IntegerSize.Int8;
+                }
+
+                DoubleValue = LongValue;
+                MinFloat = FloatSize.Double;
+
+                if (DoubleValue >= -Single.MaxValue) {
+                    FloatValue = (float)DoubleValue;
+                    MinFloat = FloatSize.Single;
+                }
             }
         }
 
-        private void MakeFloat(string integer, string frac, string exp) {
-            DoubleValue = Double.Parse(integer + frac + exp, CultureInfo.InvariantCulture);
+        private void MakeFloat(bool isNegative, bool negativeExponent, ulong integerPart, ulong fractionalPart, int fractionalPartLength, ulong exponent) {
+            DoubleValue = (isNegative ? -1 : 1) * ((double)integerPart + (double)fractionalPart / Math.Pow(10, fractionalPartLength)) * Math.Pow(10, (negativeExponent ? -1 : 1) * (long)exponent);
             MinFloat = FloatSize.Double;
             IsFractional = true;
 

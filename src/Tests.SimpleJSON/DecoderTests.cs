@@ -51,6 +51,27 @@ namespace Tests.SimpleJSON {
         }
 
         [Test]
+        public void SimpleValidFloatNumbers() {
+            Assert.AreEqual(0, DecodeJSON("0").FloatValue);
+            Assert.AreEqual(0.5f, DecodeJSON("0.5").FloatValue);
+            Assert.AreEqual(0.05f, DecodeJSON("0.05").FloatValue);
+            Assert.AreEqual(1, DecodeJSON("1.0").FloatValue);
+            Assert.AreEqual(13, DecodeJSON("13").FloatValue);
+            Assert.AreEqual(0, DecodeJSON("-0").FloatValue);
+            Assert.AreEqual(-0.5f, DecodeJSON("-0.5").FloatValue);
+            Assert.AreEqual(-0.05f, DecodeJSON("-0.05").FloatValue);
+            Assert.AreEqual(-1, DecodeJSON("-1.0").FloatValue);
+            Assert.AreEqual(-13, DecodeJSON("-13").FloatValue);
+        }
+
+        [Test]
+        public void ExponentialFloatValues() {
+            Assert.AreEqual(0.5f, DecodeJSON("5e-1").FloatValue);
+            Assert.AreEqual(50, DecodeJSON("5e1").FloatValue);
+            Assert.AreEqual(5, DecodeJSON("5e+0").FloatValue);
+        }
+
+        [Test]
         public void SByteAndLarger() {
             var obj = DecodeJSON("123");
             var negObj = DecodeJSON("-123");
