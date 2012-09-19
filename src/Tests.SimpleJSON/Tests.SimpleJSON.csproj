@@ -35,6 +35,7 @@
     <Compile Include="DecoderTests.cs" />
     <Compile Include="EncoderTests.cs" />
     <Compile Include="JObjectTests.cs" />
+    <Compile Include="JSONStreamEncoderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

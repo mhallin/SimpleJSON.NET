@@ -14,7 +14,7 @@ namespace SimpleJSON {
 
         private readonly StringBuilder _buffer = new StringBuilder();
 
-        private static readonly Dictionary<char, string> EscapeChars =
+        internal static readonly Dictionary<char, string> EscapeChars =
             new Dictionary<char, string>
                 {
                     { '"', "\\\"" },
