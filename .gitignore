@@ -2,3 +2,4 @@ bin
 src/SimpleJSON/obj
 src/Tests.SimpleJSON/obj
 TestResult.xml
+SimpleJSON.NET.VisualState.xml
