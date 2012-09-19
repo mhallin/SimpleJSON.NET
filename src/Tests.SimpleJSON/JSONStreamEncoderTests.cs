@@ -154,6 +154,25 @@ namespace Tests.SimpleJSON {
                                                                   }))));
         }
 
+        [Test]
+        public void Nesting() {
+            Assert.AreEqual("{\"array\":[{\"a\":true},{\"a\":false}]}", EncodeSimple(e => {
+                e.BeginObject();     // {
+                e.WriteKey("array");
+                e.BeginArray();      // [
+                e.BeginObject();     // {
+                e.WriteKey("a");
+                e.WriteBool(true);
+                e.EndObject();       // }
+                e.BeginObject();     // {
+                e.WriteKey("a");
+                e.WriteBool(false);
+                e.EndObject();       // }
+                e.EndArray();        // ]
+                e.EndObject();       // }
+            }));
+        }
+
         private string EncodeSimple(Action<JSONStreamEncoder> callback) {
             var writer = new StringWriter();
             var encoder = new JSONStreamEncoder(writer);

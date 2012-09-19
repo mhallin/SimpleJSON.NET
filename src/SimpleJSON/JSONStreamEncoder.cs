@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
@@ -16,48 +15,45 @@ namespace SimpleJSON {
         }
 
         private TextWriter _writer;
-        private Stack<EncoderContext> _contextStack;
+        private EncoderContext[] _contextStack;
+        private int _contextStackPointer = -1;
 
         public JSONStreamEncoder(TextWriter writer, int expectedNesting = 20) {
             _writer = writer;
-            _contextStack = new Stack<EncoderContext>(expectedNesting);
+            _contextStack = new EncoderContext[expectedNesting];
         }
 
         public void BeginArray() {
             WriteSeparator();
-            _contextStack.Push(new EncoderContext(false, true));
+            PushContext(new EncoderContext(false, true));
             _writer.Write('[');
         }
 
         public void EndArray() {
-            if (_contextStack.Count == 0) {
+            if (_contextStackPointer == -1) {
                 throw new InvalidDataException("EndArray called without BeginArray");
-            }
-            var ctx = _contextStack.Pop();
-
-            if (ctx.IsObject) {
+            } else if (_contextStack[_contextStackPointer].IsObject) {
                 throw new InvalidDataException("EndArray called after BeginObject");
             }
 
+            PopContext();
             _writer.Write(']');
         }
 
         public void BeginObject() {
             WriteSeparator();
-            _contextStack.Push(new EncoderContext(true, true));
+            PushContext(new EncoderContext(true, true));
             _writer.Write('{');
         }
 
         public void EndObject() {
-            if (_contextStack.Count == 0) {
+            if (_contextStackPointer == -1) {
                 throw new InvalidDataException("EndObject called without BeginObject");
-            }
-
-            var ctx = _contextStack.Pop();
-            if (!ctx.IsObject) {
+            } else if (!_contextStack[_contextStackPointer].IsObject) {
                 throw new InvalidDataException("EndObject called after BeginArray");
             }
 
+            PopContext();
             _writer.Write('}');
         }
 
@@ -67,22 +63,17 @@ namespace SimpleJSON {
         }
 
         public void WriteKey(string str) {
-            if (_contextStack.Count == 0) {
+            if (_contextStackPointer == -1) {
                 throw new InvalidDataException("WriteKey called without BeginObject");
+            } else if (!_contextStack[_contextStackPointer].IsObject) {
+                throw new InvalidDataException("WriteKey called after BeginArray");
             }
 
             WriteSeparator();
             WriteBareString(str);
             _writer.Write(':');
 
-            var ctx = _contextStack.Pop();
-
-            if (!ctx.IsObject) {
-                throw new InvalidDataException("WriteKey called after BeginArray");
-            }
-
-            ctx.IsEmpty = true;
-            _contextStack.Push(ctx);
+            _contextStack[_contextStackPointer].IsEmpty = true;
         }
 
         public void WriteNumber(long l) {
@@ -172,15 +163,29 @@ namespace SimpleJSON {
         }
 
         private void WriteSeparator() {
-            if (_contextStack.Count == 0) return;
+            if (_contextStackPointer == -1) return;
 
-            var ctx = _contextStack.Pop();
-            if (!ctx.IsEmpty) {
+            if (!_contextStack[_contextStackPointer].IsEmpty) {
                 _writer.Write(',');
             }
 
-            ctx.IsEmpty = false;
-            _contextStack.Push(ctx);
+            _contextStack[_contextStackPointer].IsEmpty = false;
+        }
+
+        private void PushContext(EncoderContext ctx) {
+            if (_contextStackPointer + 1 == _contextStack.Length) {
+                throw new StackOverflowException("Too much nesting for context stack, increase expected nesting when creating the encoder");
+            }
+
+            _contextStack[++_contextStackPointer] = ctx;
+        }
+
+        private void PopContext() {
+            if (_contextStackPointer == -1) {
+                throw new InvalidDataException("Stack underflow");
+            }
+
+            --_contextStackPointer;
         }
     }
 }
