@@ -31,9 +31,9 @@ namespace SimpleJSON {
 
         public void EndArray() {
             if (_contextStackPointer == -1) {
-                throw new InvalidDataException("EndArray called without BeginArray");
+                throw new InvalidOperationException("EndArray called without BeginArray");
             } else if (_contextStack[_contextStackPointer].IsObject) {
-                throw new InvalidDataException("EndArray called after BeginObject");
+                throw new InvalidOperationException("EndArray called after BeginObject");
             }
 
             PopContext();
@@ -48,9 +48,9 @@ namespace SimpleJSON {
 
         public void EndObject() {
             if (_contextStackPointer == -1) {
-                throw new InvalidDataException("EndObject called without BeginObject");
+                throw new InvalidOperationException("EndObject called without BeginObject");
             } else if (!_contextStack[_contextStackPointer].IsObject) {
-                throw new InvalidDataException("EndObject called after BeginArray");
+                throw new InvalidOperationException("EndObject called after BeginArray");
             }
 
             PopContext();
@@ -64,9 +64,9 @@ namespace SimpleJSON {
 
         public void WriteKey(string str) {
             if (_contextStackPointer == -1) {
-                throw new InvalidDataException("WriteKey called without BeginObject");
+                throw new InvalidOperationException("WriteKey called without BeginObject");
             } else if (!_contextStack[_contextStackPointer].IsObject) {
-                throw new InvalidDataException("WriteKey called after BeginArray");
+                throw new InvalidOperationException("WriteKey called after BeginArray");
             }
 
             WriteSeparator();
@@ -182,7 +182,7 @@ namespace SimpleJSON {
 
         private void PopContext() {
             if (_contextStackPointer == -1) {
-                throw new InvalidDataException("Stack underflow");
+                throw new InvalidOperationException("Stack underflow");
             }
 
             --_contextStackPointer;
