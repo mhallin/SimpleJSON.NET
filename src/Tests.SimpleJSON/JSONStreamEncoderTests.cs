@@ -188,6 +188,30 @@ namespace Tests.SimpleJSON {
             }));
         }
 
+        [Test]
+        public void Indentation() {
+            Assert.AreEqual("{\n \"array\":[\n  {\"a\":true},\n  {\"a\":false}\n ]\n}", EncodeSimple(e => {
+                e.BeginObject();     // {
+                e.InsertNewline();
+                e.WriteKey("array");
+                e.BeginArray();      // [
+                e.InsertNewline();
+                e.BeginObject();     // {
+                e.WriteKey("a");
+                e.WriteBool(true);
+                e.EndObject();       // }
+                e.InsertNewline();
+                e.BeginObject();     // {
+                e.WriteKey("a");
+                e.WriteBool(false);
+                e.EndObject();       // }
+                e.InsertNewline();
+                e.EndArray();        // ]
+                e.InsertNewline();
+                e.EndObject();       // }
+            }));
+        }
+
         private string EncodeSimple(Action<JSONStreamEncoder> callback) {
             var writer = new StringWriter(CultureInfo.InvariantCulture);
             var encoder = new JSONStreamEncoder(writer);

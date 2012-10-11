@@ -17,6 +17,7 @@ namespace SimpleJSON {
         private TextWriter _writer;
         private EncoderContext[] _contextStack;
         private int _contextStackPointer = -1;
+        private bool _newlineInserted = false;
 
         public JSONStreamEncoder(TextWriter writer, int expectedNesting = 20) {
             _writer = writer;
@@ -37,6 +38,7 @@ namespace SimpleJSON {
             }
 
             PopContext();
+            WriteNewline();
             _writer.Write(']');
         }
 
@@ -54,6 +56,7 @@ namespace SimpleJSON {
             }
 
             PopContext();
+            WriteNewline();
             _writer.Write('}');
         }
 
@@ -144,6 +147,10 @@ namespace SimpleJSON {
             }
         }
 
+        public void InsertNewline() {
+            _newlineInserted = true;
+        }
+
         private void WriteBareString(string str) {
             _writer.Write('"');
 
@@ -216,6 +223,19 @@ namespace SimpleJSON {
             }
 
             _contextStack[_contextStackPointer].IsEmpty = false;
+
+            WriteNewline();
+        }
+
+        private void WriteNewline() {
+            if (_newlineInserted) {
+                _writer.Write('\n');
+                for (var i = 0; i < _contextStackPointer + 1; ++i) {
+                    _writer.Write(' ');
+                }
+
+                _newlineInserted = false;
+            }
         }
 
         private void PushContext(EncoderContext ctx) {
